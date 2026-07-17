@@ -35,15 +35,17 @@
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
       defaultModel: 'thor-high',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
+      // Every lane loads an mmproj projector on the gateway, so all of them read images (screenshots).
+      // See dark-core llama-swap/config.yaml.
       models: [
-        createModel('thor-high', 'Thor - code (256K)', { supportsVision: false }),
-        createModel('thor-ultra', 'Thor Ultra - code (256K)', { supportsVision: false }),
-        createModel('thor-med', 'Thor Med - code (256K)', { supportsVision: false }),
-        createModel('thor-1m-high', 'Thor 1M - long context', { supportsVision: false }),
-        createModel('thor-1m-ultra', 'Thor 1M Ultra - long context', { supportsVision: false }),
-        createModel('loki-high', 'Loki - fast MoE', { supportsVision: false }),
-        createModel('loki-ultra', 'Loki Ultra - MoE', { supportsVision: false }),
-        createModel('loki-med', 'Loki Med - MoE', { supportsVision: false })
+        createModel('thor-high', 'Thor - code (256K)', { supportsVision: true }),
+        createModel('thor-ultra', 'Thor Ultra - code (256K)', { supportsVision: true }),
+        createModel('thor-med', 'Thor Med - code (256K)', { supportsVision: true }),
+        createModel('thor-1m-high', 'Thor 1M - long context', { supportsVision: true }),
+        createModel('thor-1m-ultra', 'Thor 1M Ultra - long context', { supportsVision: true }),
+        createModel('loki-high', 'Loki - fast MoE', { supportsVision: true }),
+        createModel('loki-ultra', 'Loki Ultra - MoE', { supportsVision: true }),
+        createModel('loki-med', 'Loki Med - MoE', { supportsVision: true })
       ]
     },
     anthropic: {
@@ -599,6 +601,11 @@
     }
 
     // --- Provider-specific rules ---
+
+    // Dark LLM: every lane (loki / thor / thor-1m) loads an mmproj projector, so all read images.
+    if (providerId === 'darkllm') {
+      return true;
+    }
 
     // z.ai: only explicit vision models
     if (providerId === 'zai' || providerId === 'zaiCoding') {

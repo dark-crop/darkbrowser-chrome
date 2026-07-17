@@ -25,6 +25,8 @@ translating Anthropic <-> OpenAI on the fly. Our changes are a thin, contained l
   `providers.darkllm.apiKey` via `registry.updateState`.
 - `auth-bypass.js` - silences the UPSTREAM Claude login only (fake `accessToken` etc.). It never writes
   a usable Dark LLM key; the real credential is `providers.darkllm.apiKey`, gated separately.
+- `signin-banner.js` - the VISIBLE half of the gate. Loaded by `sidepanel.html`; renders a full-panel
+  sign-in takeover while signed out (same paste flow as the options card), hides itself once signed in.
 
 ## Sign-in = darkcode-auth
 
@@ -42,10 +44,10 @@ limits + private vector store.
   `*-overlay.js`, `provider-settings.*`).
 - No em-dash characters anywhere (family rule).
 - Models roster mirrors `dark-core/litellm/config.yaml` (loki / thor / thor-1m x effort tiers).
+- **Vision:** all lanes are marked `supportsVision: true` because every lane loads an `--mmproj`
+  projector in `dark-core/llama-swap/config.yaml`. `inferVisionSupport` also returns true for
+  `darkllm`. If the gateway ever drops the projectors, flip these back.
 
 ## Known follow-ups
 
-- **Vision lane:** current lanes are text-first (drive the page via the accessibility-tree content
-  script). Screenshot visual reasoning needs a vision model on the gateway.
-- Signed-out UX in the side panel currently surfaces as an in-chat error on send; a panel banner would
-  be nicer.
+- None open. (Lock, hard sign-in via options card + side-panel takeover, and vision all done.)

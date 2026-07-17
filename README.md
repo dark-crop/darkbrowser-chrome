@@ -70,7 +70,7 @@ flowchart LR
 | 🧠 **Your model lanes** | Loki (fast MoE), Thor (coder, 256K), Thor 1M (long context) - picked from the side-panel selector. |
 | 🖱 **Full browser toolkit** | Screenshots, clicks, typing, scrolling, tab navigation, and workflow recording, all intact. |
 | 🎨 **Provider-themed UI** | The whole panel themes to Dark LLM power-purple - sidebar, send button, page glow. |
-| 🧩 **Reads pages without vision** | An accessibility-tree content script lets text-only lanes still drive the page. |
+| 👁 **Every lane reads screenshots** | All three lanes load an mmproj projector on the gateway, so the agent's screenshots reach the model. |
 
 ## Install
 
@@ -121,8 +121,8 @@ Each lane has effort tiers (`med` / `high` / `ultra`) exposed as separate entrie
 The gateway's exact roster is defined in
 [dark-core `litellm/config.yaml`](https://github.com/dark-crop/dark-core).
 
-> **Vision note:** the current lanes are text-first and drive the page through the accessibility tree.
-> Screenshot-based visual reasoning needs a vision lane on the gateway; that is a planned follow-up.
+> **Vision:** every lane loads an mmproj projector on the gateway (see dark-core `llama-swap/config.yaml`),
+> so all lanes read images. The agent's screenshots reach the model - no separate vision lane needed.
 
 ## The lock
 
@@ -149,6 +149,7 @@ re-routes them to your gateway, translating Anthropic ↔ OpenAI on the fly.
 | `provider-registry.js` | Provider definitions, the Dark LLM lock, model lists, state management |
 | `api-adapter.js` | API translation layer (Anthropic ↔ OpenAI) + the hard sign-in gate |
 | `provider-settings.html` / `.js` | Options UI: the Dark LLM account sign-in card (paste flow) |
+| `signin-banner.js` | Side-panel sign-in takeover shown while signed out (the visible half of the gate) |
 | `auth-bypass.js` | Keeps the stock extension from showing Claude's own login (placeholder tokens only) |
 | `ui-branding.js` | Re-skins the panel to Darkbrowser + Dark LLM power-purple |
 | `brand-overlay.js` | Page glow border and stop-button theming |
@@ -189,5 +190,5 @@ Part of the [**dark-crop**](https://github.com/dark-crop) family:
 
 ## Status
 
-Early preview. The lock and hard sign-in work; a vision lane for screenshot reasoning is the next
-step. License: MIT.
+Early preview. The lock, hard sign-in (options card + side-panel takeover), and vision (all lanes read
+screenshots) all work. License: MIT.
