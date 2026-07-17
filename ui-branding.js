@@ -27,7 +27,11 @@
     // upstream fork's build), so the Claude -> Darkbrowser rules above never see them. This sweeps
     // any leftover "BrowserKing" in visible text (e.g. the HIGH RISK banner, the reply placeholder).
     ['BrowserKing', 'Darkbrowser'],
-    ['Browser King', 'Darkbrowser']
+    ['Browser King', 'Darkbrowser'],
+    // Final catch-all for any remaining standalone "Claude" in the extension's own UI (e.g. "You have
+    // allowed Claude to take all actions"). Runs last so the specific phrases above win first. Only
+    // touches this extension's pages, never the browsed page's content.
+    ['Claude', 'Darkbrowser']
   ];
 
   function replaceText(root) {

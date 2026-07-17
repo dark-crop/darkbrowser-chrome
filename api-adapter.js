@@ -1144,10 +1144,35 @@
     }
   }
 
+  // Look up the username from the gateway (key_alias) using the active key, and cache it. Runs
+  // lazily so users who signed in before this feature existed still get their name without
+  // re-signing-in. /key/info lives at the gateway ROOT, not under /v1.
+  async function lookupUsername() {
+    try {
+      const provider = getActiveProvider(await getProviderConfig());
+      if (!isSignedIn(provider)) {
+        return null;
+      }
+      const base = String(provider.baseUrl || DEFAULT_PROVIDER_CONFIG.darkllm.baseUrl).replace(/\/v1\/?$/, '');
+      const res = await fetch(`${base}/key/info`, { headers: { Authorization: `Bearer ${provider.apiKey}` } });
+      if (!res.ok) {
+        return null;
+      }
+      const data = await res.json();
+      const name = data?.info?.key_alias || data?.info?.user_id || '';
+      if (name && globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.set({ darkbrowserUsername: name });
+      }
+      return name || null;
+    } catch {
+      return null;
+    }
+  }
+
   // Build the (mock) account profile the stock extension shows, using the real signed-in username
   // instead of the placeholder custom-provider identity.
   async function buildProfile() {
-    const username = await getUsername();
+    const username = (await getUsername()) || (await lookupUsername());
     if (!username) {
       return MOCK_PROFILE;
     }

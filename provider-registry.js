@@ -494,17 +494,34 @@
         return;
       }
 
+      // The locked provider's roster is controlled by us (3 lanes, effort is a separate axis), so
+      // ALWAYS use the definition's models - never merge stale stored models. Without this, a
+      // returning user whose stored state still has the old effort-suffixed models (thor-high, ...)
+      // would see them unioned into the picker.
+      const isLocked = providerId === LOCKED_PROVIDER;
       normalized.providers[providerId] = {
         ...normalized.providers[providerId],
         ...existing,
-        models: Array.isArray(existing.models) && existing.models.length
-          ? mergeModels(normalized.providers[providerId].models, existing.models)
-          : normalized.providers[providerId].models
+        models: isLocked
+          ? deepClone(PROVIDERS[LOCKED_PROVIDER].models)
+          : (Array.isArray(existing.models) && existing.models.length
+            ? mergeModels(normalized.providers[providerId].models, existing.models)
+            : normalized.providers[providerId].models)
       };
     });
 
-    if (!normalized.providers[normalized.activeProvider]) {
-      normalized.activeProvider = LOCKED_PROVIDER;
+    // Darkbrowser is single-provider: keep the active provider on the lock.
+    normalized.activeProvider = LOCKED_PROVIDER;
+
+    // Map a stored effort-suffixed selection (old scheme, e.g. "thor-1m-high") back to its lane, so
+    // the picker's checkmark lands on a real lane instead of a now-missing model id.
+    const locked = normalized.providers[LOCKED_PROVIDER];
+    if (locked) {
+      const laneIds = PROVIDERS[LOCKED_PROVIDER].models.map((model) => model.id);
+      if (!laneIds.includes(locked.model)) {
+        const stored = String(locked.model || '');
+        locked.model = ['thor-1m', 'thor', 'loki'].find((lane) => stored.startsWith(lane)) || 'thor';
+      }
     }
 
     return normalized;
