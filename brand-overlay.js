@@ -113,16 +113,19 @@
     }
 
     const stopButton = document.getElementById('claude-agent-stop-button');
-    if (stopButton && stopButton.innerHTML.includes('Stop Claude')) {
-      stopButton.innerHTML = stopButton.innerHTML.replace('Stop Claude', 'Stop Darkbrowser');
+    if (stopButton && (stopButton.innerHTML.includes('Stop Claude') || stopButton.innerHTML.includes('Stop BrowserKing'))) {
+      stopButton.innerHTML = stopButton.innerHTML
+        .replace('Stop Claude', 'Stop Darkbrowser')
+        .replace('Stop BrowserKing', 'Stop Darkbrowser');
     }
 
     const staticIndicator = document.getElementById('claude-static-indicator-container');
     if (staticIndicator) {
       const html = staticIndicator.innerHTML;
-      if (html.includes('Claude is active') || html.includes('#D97757')) {
+      if (html.includes('Claude is active') || html.includes('BrowserKing is active') || html.includes('#D97757')) {
         staticIndicator.innerHTML = html
           .replaceAll('Claude is active in this tab group', 'Darkbrowser is active in this tab group')
+          .replaceAll('BrowserKing is active in this tab group', 'Darkbrowser is active in this tab group')
           .replaceAll('#D97757', color);
       }
     }

@@ -22,7 +22,12 @@
     ['Message Claude...', 'Message Darkbrowser...'],
     ['Reply to Claude', 'Reply to Darkbrowser'],
     ['Teach Claude', 'Teach Darkbrowser'],
-    ['Pin Claude for quick access', 'Pin Darkbrowser for quick access']
+    ['Pin Claude for quick access', 'Pin Darkbrowser for quick access'],
+    // Catch-all: some brand strings are hardcoded as "BrowserKing" in the compiled bundle (the
+    // upstream fork's build), so the Claude -> Darkbrowser rules above never see them. This sweeps
+    // any leftover "BrowserKing" in visible text (e.g. the HIGH RISK banner, the reply placeholder).
+    ['BrowserKing', 'Darkbrowser'],
+    ['Browser King', 'Darkbrowser']
   ];
 
   function replaceText(root) {
@@ -264,7 +269,16 @@
       }
 
       .\\[\\&_svg\\]\\:\\!fill-\\[\\#D97757\\] svg,
-      .\\[\\&_svg\\]\\:\\!fill-\\[\\#d97757\\] svg {
+      .\\[\\&_svg\\]\\:\\!fill-\\[\\#D97757\\] svg *,
+      .\\[\\&_svg\\]\\:\\!fill-\\[\\#d97757\\] svg,
+      .\\[\\&_svg\\]\\:\\!fill-\\[\\#d97757\\] svg * {
+        fill: ${definition.color} !important;
+      }
+
+      /* The "thinking" / "shimmer" working spark renders its fill on the child <path>, so target
+         descendants too - otherwise the Claude orange survives the parent svg rule above. */
+      svg[class*="fill-[#D97757]"] *,
+      svg[class*="fill-[#d97757]"] * {
         fill: ${definition.color} !important;
       }
 

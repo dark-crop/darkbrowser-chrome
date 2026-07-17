@@ -1,7 +1,7 @@
 /**
  * Voice Input
  *
- * Injects a microphone button into the BrowserKing sidepanel chat input area.
+ * Injects a microphone button into the Darkbrowser sidepanel chat input area.
  * Uses the Web Speech API (SpeechRecognition) to transcribe speech to text
  * and populate the textarea for hands-free interaction.
  */
@@ -10,7 +10,7 @@
   'use strict';
 
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    console.warn('[BrowserKing Voice] Web Speech API not supported in this browser.');
+    console.warn('[Darkbrowser Voice] Web Speech API not supported in this browser.');
     return;
   }
 
@@ -116,7 +116,7 @@
 
     recognition.onerror = (event) => {
       if (event.error !== 'aborted') {
-        console.warn('[BrowserKing Voice] Recognition error:', event.error);
+        console.warn('[Darkbrowser Voice] Recognition error:', event.error);
       }
       stopListening();
     };
