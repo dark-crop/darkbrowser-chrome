@@ -612,8 +612,10 @@
     return provider.supportsVision !== false;
   }
 
-  function buildOpenAIRequest(body, provider, providerConfig) {
-    const targetModel = resolveTargetModel(body, provider);
+  function buildOpenAIRequest(body, provider, providerConfig, overrideModel) {
+    // Prefer the caller's already-resolved model (which has the effort tier applied). Falling back to
+    // resolveTargetModel here would send the bare lane id (e.g. "thor"), which the gateway rejects.
+    const targetModel = overrideModel || resolveTargetModel(body, provider);
     let messages = convertAnthropicMessagesToOpenAI(body);
 
     if (!messages.some((message) => message.role === 'system')) {
@@ -1345,7 +1347,7 @@
       headers.delete('authorization');
     }
     const upstreamUrl = rawUpstreamUrl;
-    const openAIRequest = buildOpenAIRequest(anthropicRequest, provider, providerConfig);
+    const openAIRequest = buildOpenAIRequest(anthropicRequest, provider, providerConfig, requestedModel);
 
     console.log('[API Adapter] Proxying Anthropic messages -> OpenAI chat completions:', {
       upstreamUrl,

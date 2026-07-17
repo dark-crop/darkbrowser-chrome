@@ -53,6 +53,31 @@
     }
   }
 
+  // Some brand strings live in attributes (e.g. the chat input's placeholder "Reply to BrowserKing",
+  // aria-labels, titles) which the text-node walker above never sees. Rebrand those too.
+  const BRAND_ATTRS = ['placeholder', 'aria-label', 'title'];
+  function replaceAttributes(root) {
+    const scope = root && root.querySelectorAll ? root : document.body;
+    if (!scope || !scope.querySelectorAll) {
+      return;
+    }
+    scope.querySelectorAll('[placeholder], [aria-label], [title]').forEach((element) => {
+      BRAND_ATTRS.forEach((attr) => {
+        const value = element.getAttribute(attr);
+        if (!value) {
+          return;
+        }
+        let next = value;
+        replacements.forEach(([from, to]) => {
+          next = next.split(from).join(to);
+        });
+        if (next !== value) {
+          element.setAttribute(attr, next);
+        }
+      });
+    });
+  }
+
   function hexToHsl(hex) {
     const sanitized = hex.replace('#', '');
     const value = sanitized.length === 3
@@ -344,9 +369,13 @@
       .replace('Claude Options', `${registry.BRAND.name} Settings`)
       .replace('New Tab', registry.BRAND.name);
     replaceText(document.body);
+    replaceAttributes(document.body);
   }
 
-  const observer = new MutationObserver(() => replaceText(document.body));
+  const observer = new MutationObserver(() => {
+    replaceText(document.body);
+    replaceAttributes(document.body);
+  });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
