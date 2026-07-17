@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" data-theme="claude">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon-128.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darkbrowser</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #1a1a2e;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        text-align: center;
+      }
+      .container { max-width: 400px; padding: 40px; }
+      h2 { color: #fff; margin-bottom: 16px; }
+      p { color: #888; margin-bottom: 24px; line-height: 1.5; }
+      a {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #4a9eff;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      a:hover { background: #357abd; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Provider Mode</h2>
+      <p>This extension is configured to use your own model provider. No Anthropic login is required.</p>
+      <a href="provider-settings.html" id="settings-link">Open Provider Settings</a>
+    </div>
+    <script>
+      document.getElementById('settings-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.runtime.openOptionsPage();
+      });
+    </script>
+  </body>
+</html>

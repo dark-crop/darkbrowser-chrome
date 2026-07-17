@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en" data-theme="claude">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Darkbrowser - Sign in</title>
+    <script src="/provider-registry.js"></script>
+    <script src="/theme-init.js"></script>
+    <script src="/provider-config.js"></script>
+    <script src="/ui-branding.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BuhQyaZZ.css">
+    <style>
+      body {
+        margin: 0;
+        background: hsl(var(--bg-100));
+        color: hsl(var(--text-100));
+        font-family: var(--font-ui);
+      }
+
+      .page {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 12px;
+        padding: 28px;
+        border: 1px solid hsl(var(--border-300) / 0.22);
+        border-radius: 20px;
+        background:
+          radial-gradient(circle at top right, rgba(217, 119, 87, 0.18), transparent 28%),
+          radial-gradient(circle at bottom left, rgba(10, 132, 255, 0.12), transparent 32%),
+          hsl(var(--bg-000));
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 560;
+      }
+
+      .hero p {
+        margin: 0;
+        color: hsl(var(--text-300));
+        line-height: 1.55;
+      }
+
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        border: 1px solid hsl(var(--border-300) / 0.2);
+        background: hsl(var(--bg-100));
+        color: hsl(var(--text-200));
+        font-size: 12px;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .search {
+        flex: 1 1 240px;
+        min-width: 240px;
+      }
+
+      .search input,
+      .provider-card input,
+      .provider-card select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid hsl(var(--border-300) / 0.26);
+        background: hsl(var(--bg-000));
+        color: hsl(var(--text-100));
+        padding: 12px 14px;
+        font-size: 14px;
+      }
+
+      .search input::placeholder,
+      .provider-card input::placeholder {
+        color: hsl(var(--text-400));
+      }
+
+      .provider-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+      }
+
+      .provider-card {
+        border-radius: 18px;
+        border: 1px solid hsl(var(--border-300) / 0.22);
+        background: hsl(var(--bg-000));
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .provider-card.active {
+        box-shadow: 0 0 0 1px var(--provider-color, #d97757), 0 20px 40px rgba(15, 23, 42, 0.06);
+      }
+
+      .provider-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .provider-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .provider-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: var(--provider-color, #d97757);
+        box-shadow: 0 0 0 5px color-mix(in srgb, var(--provider-color, #d97757) 18%, transparent);
+        flex: 0 0 auto;
+      }
+
+      .provider-heading {
+        min-width: 0;
+      }
+
+      .provider-heading h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 560;
+      }
+
+      .provider-heading p {
+        margin: 3px 0 0;
+        color: hsl(var(--text-400));
+        font-size: 12px;
+      }
+
+      .provider-actions {
+        display: flex;
+        gap: 8px;
+        align-items: start;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        color: hsl(var(--text-300));
+        font-size: 13px;
+      }
+
+      .toggle input {
+        width: auto;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 12px;
+        font-weight: 560;
+        color: hsl(var(--text-300));
+      }
+
+      .field small {
+        color: hsl(var(--text-400));
+        line-height: 1.4;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 13px;
+        font-weight: 560;
+        cursor: pointer;
+        transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: var(--provider-color, hsl(var(--brand-100)));
+        color: white;
+      }
+
+      button.secondary {
+        background: hsl(var(--bg-100));
+        color: hsl(var(--text-200));
+        border: 1px solid hsl(var(--border-300) / 0.2);
+      }
+
+      .status {
+        min-height: 20px;
+        font-size: 12px;
+        color: hsl(var(--text-400));
+      }
+
+      .status.error {
+        color: hsl(var(--danger-100));
+      }
+
+      .status.success {
+        color: hsl(var(--success-100));
+      }
+
+      .card-note {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: hsl(var(--bg-100));
+        color: hsl(var(--text-300));
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .footer-bar {
+        position: sticky;
+        bottom: 0;
+        margin-top: 16px;
+        border-radius: 18px;
+        background: color-mix(in srgb, hsl(var(--bg-000)) 92%, transparent);
+        backdrop-filter: blur(14px);
+        border: 1px solid hsl(var(--border-300) / 0.18);
+        padding: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .footer-bar p {
+        margin: 0;
+        color: hsl(var(--text-300));
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .page {
+          padding: 16px;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        .provider-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <section class="hero" style="--provider-color:#a855f7">
+        <h1>Darkbrowser</h1>
+        <p>
+          Darkbrowser is locked to your Dark LLM gateway. Sign in with your Dark LLM account to get an
+          access token - the agent will not run until you do. There is no guest access.
+        </p>
+        <div class="hero-meta">
+          <span class="pill" id="signin-status-pill">Checking sign-in...</span>
+          <span class="pill">Gateway: dark-llm.cropbinary.com</span>
+        </div>
+      </section>
+
+      <!-- Sign-in card (CLI-style paste flow): open the gateway /token page, sign in there, paste
+           the token back here. Validated against /v1/models before it is stored. -->
+      <article class="provider-card active" id="signin-card" style="--provider-color:#a855f7">
+        <div class="provider-top">
+          <div class="provider-title">
+            <span class="provider-dot"></span>
+            <div class="provider-heading">
+              <h2>Dark LLM account</h2>
+              <p id="signin-sub">Sign in to activate Darkbrowser</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-note">
+          1. Click <strong>Open sign-in page</strong> and sign in with your Dark LLM username and
+          password. 2. Copy the token it shows you. 3. Paste it below and click
+          <strong>Save token</strong>.
+        </div>
+
+        <div class="buttons">
+          <button class="primary" id="open-signin" type="button">Open sign-in page</button>
+        </div>
+
+        <div class="field">
+          <label>Access token</label>
+          <input id="token-input" type="password" placeholder="sk-..." autocomplete="off" />
+          <small>Your token is stored locally in this browser only and sent to the Dark LLM gateway.</small>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Model</label>
+            <select id="model-select"></select>
+          </div>
+          <div class="field">
+            <label>Signed in as</label>
+            <small id="signed-key">Not signed in.</small>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button class="primary" id="save-token" type="button">Save token</button>
+          <button class="secondary" id="sign-out" type="button">Sign out</button>
+        </div>
+
+        <div class="status" id="signin-status"></div>
+      </article>
+
+      <!-- Hidden by default: the full multi-provider grid still exists in code but is not surfaced. -->
+      <div class="controls" id="advanced-controls" style="display:none">
+        <div class="search">
+          <input id="provider-search" type="search" placeholder="Filter providers" />
+        </div>
+        <div class="buttons">
+          <button class="secondary" id="sync-all-models" type="button">Fetch live models</button>
+          <button class="secondary" id="reset-providers" type="button">Reset defaults</button>
+        </div>
+      </div>
+
+      <div class="provider-grid" id="provider-grid" style="display:none"></div>
+
+      <div class="footer-bar" style="display:none">
+        <p id="provider-summary">Loading providers...</p>
+        <div class="buttons">
+          <button class="secondary" id="save-providers" type="button">Save configuration</button>
+        </div>
+      </div>
+    </div>
+    <script src="/provider-settings.js"></script>
+  </body>
+</html>
