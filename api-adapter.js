@@ -1258,10 +1258,20 @@
     }
     if (command?.cmd === 'effort') {
       const tier = normalizeEffort(command.arg);
+      const lane = provider.model || 'thor';
+      // No explicit tier (this is what the / menu sends): open the effort picker dialog. A flag in
+      // storage triggers effort-dialog.js, which is running on the side panel.
       if (!tier) {
         const current = await getEffort();
+        try {
+          if (globalThis.chrome?.storage?.local) {
+            await chrome.storage.local.set({ darkbrowserEffortPrompt: Date.now() });
+          }
+        } catch (error) {
+          console.warn('[API Adapter] Failed to open effort dialog:', error);
+        }
         return buildAssistantMessageResponse(
-          `Current effort: ${capitalize(current)}. Usage: /effort low | med | high | ultra`,
+          `Pick an effort tier in the popup. Current: ${capitalize(current)}.`,
           provider.model || 'darkllm',
           wantsStream
         );
@@ -1269,7 +1279,7 @@
       await setEffort(tier);
       await writeDebugLog({ phase: 'slash_effort', tier });
       return buildAssistantMessageResponse(
-        `Effort set to ${capitalize(tier)}. New messages use the ${provider.model || 'thor'} lane at ${capitalize(tier)} effort.`,
+        `Effort set to ${capitalize(tier)}. New messages use the ${lane} lane at ${capitalize(tier)} effort.`,
         provider.model || 'darkllm',
         wantsStream
       );

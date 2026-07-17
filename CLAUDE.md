@@ -34,6 +34,13 @@ translating Anthropic <-> OpenAI on the fly. Our changes are a thin, contained l
 - **Two-axis model (like the CLI):** the picker shows 3 LANES only (thor / thor-1m / loki); the effort
   tier is the `/effort` axis. `applyEffort()` combines them into the real gateway id (`thor` + `high`
   -> `thor-high`) at request time. Don't put effort variants back in the model picker.
+- **Effort dialog:** `/effort` with no tier (what the `/` menu sends) writes `darkbrowserEffortPrompt`
+  to storage; `effort-dialog.js` (on the side panel) opens a picker modal with the active tier
+  highlighted, and stores `darkbrowserEffort` on selection. `/effort <tier>` still sets directly.
+- **Bundle patches (documented exceptions to "don't edit assets/"):** `SessionPool` `Am()` adds the
+  effort/logout `/`-menu entries; `mcpPermissions` tab-group titles `A`/`R`/`displayName??` were changed
+  from "Claude" to "Darkbrowser" (tab groups are set via the Chrome API, so ui-branding can't reach
+  them). Re-apply both if the bundles are regenerated.
 
 ## Sign-in = darkcode-auth
 
