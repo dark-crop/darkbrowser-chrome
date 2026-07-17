@@ -138,11 +138,11 @@
         <ol>
           <li>Click <strong>Open sign-in page</strong> and sign in.</li>
           <li>Copy the access token it shows you.</li>
-          <li>Paste it below and click <strong>Save token</strong>.</li>
+          <li>Paste it below and click <strong>Sign in</strong>.</li>
         </ol>
         <button type="button" class="primary" data-role="open">Open sign-in page</button>
         <input type="password" placeholder="Paste access token (sk-...)" autocomplete="off" data-role="token" />
-        <button type="button" class="primary" data-role="save">Save token</button>
+        <button type="button" class="primary" data-role="save">Sign in</button>
         <div class="db-status" data-role="status"></div>
       </div>
     `;
