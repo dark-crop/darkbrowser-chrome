@@ -21,12 +21,24 @@
   <a href="#install">Install</a> ·
   <a href="#sign-in">Sign in</a> ·
   <a href="#models">Models</a> ·
+  <a href="#commands">Commands</a> ·
   <a href="#the-lock">The lock</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#security">Security</a>
+  <a href="#architecture">Architecture</a>
 </p>
 
 ---
+
+<p align="center">
+  <img src="docs/assets/darkbrowser.png" alt="Darkbrowser: the side panel driving Unsplash on the Thor lane, purple page-glow border, 'Take screenshot' and 'Stop Darkbrowser' controls" width="880" />
+</p>
+
+<table align="center">
+<tr>
+<td align="center">🔒<br/><b>One gateway</b><br/>dark-llm, locked</td>
+<td align="center">👁<br/><b>Every lane sees</b><br/>screenshots, all models</td>
+<td align="center">🚪<br/><b>Hard sign-in</b><br/>no guest access</td>
+</tr>
+</table>
 
 ## The unlock
 
@@ -68,9 +80,10 @@ flowchart LR
 | 🔒 **One gateway, one provider** | Hard-locked to `dark-llm`. The other 15 providers exist in code but never surface in the UI. |
 | 🚪 **Hard sign-in, no guest** | The agent refuses every request until you sign in with a Dark LLM account and store a real token. |
 | 🧠 **Your model lanes** | Loki (fast MoE), Thor (coder, 256K), Thor 1M (long context) - picked from the side-panel selector. |
+| ⚡ **Two-axis control** | Pick the lane in the dropdown, the effort tier with `/effort`. Just like the darkcode CLI. |
 | 🖱 **Full browser toolkit** | Screenshots, clicks, typing, scrolling, tab navigation, and workflow recording, all intact. |
-| 🎨 **Provider-themed UI** | The whole panel themes to Dark LLM power-purple - sidebar, send button, page glow. |
 | 👁 **Every lane reads screenshots** | All three lanes load an mmproj projector on the gateway, so the agent's screenshots reach the model. |
+| 🎨 **Power-purple UI** | The whole panel themes to Dark LLM purple - sidebar, send button, page-glow border, blob icon. |
 
 ## Install
 
@@ -92,18 +105,16 @@ There is no build step - the extension loads directly from source.
 Darkbrowser will not run until you sign in. This mirrors the darkcode CLI's browser flow: sign in on
 the gateway page, then paste the token back.
 
-1. Open the extension **Options** (right-click the icon → Options, or `chrome://extensions` →
-   Details → Extension options) and go to the **Providers** tab.
-2. On the **Dark LLM account** card, click **Open sign-in page**. It opens
-   `https://dark-llm.cropbinary.com/token`.
-3. Sign in there with your Dark LLM **username and password**. The page shows your access token.
-4. Copy the token, paste it into the **Access token** field, and click **Save token**.
+1. On the side panel's **Sign in** takeover (or Options -> Providers -> Dark LLM account), click
+   **Open sign-in page**. It opens `https://dark-llm.cropbinary.com/token`.
+2. Sign in there with your Dark LLM **username and password**. The page shows your access token.
+3. Copy the token, paste it into the **access token** field, and click **Sign in**.
 
-The token is validated against the gateway (`/v1/models`) before it is stored. Once signed in, the
-card shows **Signed in** and the side panel is ready. **Sign out** clears the token and re-locks the
-agent.
+The token is validated against the gateway (`/v1/models`) before it is stored, and your username is
+read back from `/key/info` so the account shows who you are. `/logout` (or the Sign out button)
+clears it and re-locks the agent.
 
-> Don't have an account? Accounts are provisioned on the box with
+> **Don't have an account?** Accounts are provisioned on the box with
 > [`add-user.py`](https://github.com/dark-crop/dark-core/blob/main/docs/users.md). Each account gets
 > its own usage tier and private RAG store.
 
@@ -117,21 +128,20 @@ Every lane routes to your gateway. Pick one from the model selector at the top o
 | **Thor 1M** | long-context variant | Large pages, long multi-step sessions |
 | **Loki** | fast MoE | Quick, cheap actions |
 
-**Two-axis control (like the darkcode CLI):** the model picker chooses the **lane**; the **effort**
-tier is a separate axis set with the `/effort` chat command (`/effort low | med | high | ultra`,
-default **high**). Darkbrowser combines them into the real gateway model (lane `thor` + effort `high`
--> `thor-high`). The gateway's exact roster is defined in
-[dark-core `litellm/config.yaml`](https://github.com/dark-crop/dark-core).
+**Two-axis control (like the darkcode CLI):** the picker chooses the **lane**; the **effort** tier is
+a separate axis set with `/effort` (default **high**). Darkbrowser combines them into the real gateway
+model (lane `thor` + effort `high` -> `thor-high`). Every lane loads an mmproj projector on the
+gateway (dark-core `llama-swap/config.yaml`), so all lanes read the agent's screenshots.
 
-### Chat commands
+## Commands
+
+Type `/` in the chat to see them.
 
 | Command | Effect |
 |---|---|
-| `/effort low\|med\|high\|ultra` | Set the effort tier for new messages (default high). `/effort` alone shows the current tier. |
+| `/effort` | Open the effort picker (Low / Med / High / Ultra, active tier highlighted). `/effort high` sets it directly. |
 | `/logout` | Sign out (clears your token); the sign-in screen reappears. Alias: `/signout`. |
-
-> **Vision:** every lane loads an mmproj projector on the gateway (see dark-core `llama-swap/config.yaml`),
-> so all lanes read images. The agent's screenshots reach the model - no separate vision lane needed.
+| `/compact` | Clear history, keep a summary (built in). |
 
 ## The lock
 
@@ -139,9 +149,9 @@ The lock is deliberately small and lives in a few well-contained places:
 
 | Where | What it does |
 |---|---|
-| `provider-registry.js` | `LOCKED_PROVIDER = 'darkllm'`. Only Dark LLM is enabled and active by default; every fallback resolves to it. |
+| `provider-registry.js` | `LOCKED_PROVIDER = 'darkllm'`. Only Dark LLM is enabled and active; every fallback resolves to it. |
 | `api-adapter.js` | The sign-in gate: `isSignedIn()` rejects every request with a placeholder / empty key. No guest access. |
-| `provider-settings.*` | Surfaces only the Dark LLM account card; the multi-provider grid is hidden. |
+| `provider-settings.*` / `signin-banner.js` | Surface only the Dark LLM account card + side-panel sign-in takeover. |
 | `auth-bypass.js` | Silences the *upstream* Claude login only - it never mints a usable Dark LLM key. |
 
 The other 15 provider definitions from the upstream project are kept in code (so the routing path is
@@ -151,21 +161,19 @@ unchanged) but are hidden in the UI and never active.
 
 Darkbrowser is based on Anthropic's **Claude for Chrome** extension. It does not reimplement browser
 automation - it **intercepts** the stock extension's calls to `api.anthropic.com/v1/messages` and
-re-routes them to your gateway, translating Anthropic ↔ OpenAI on the fly.
+re-routes them to your gateway, translating Anthropic <-> OpenAI on the fly.
 
 | File | Purpose |
 |---|---|
-| `provider-registry.js` | Provider definitions, the Dark LLM lock, model lists, state management |
-| `api-adapter.js` | API translation layer (Anthropic ↔ OpenAI) + the hard sign-in gate |
-| `provider-settings.html` / `.js` | Options UI: the Dark LLM account sign-in card (paste flow) |
-| `signin-banner.js` | Side-panel sign-in takeover shown while signed out (the visible half of the gate) |
+| `provider-registry.js` | Provider definitions, the Dark LLM lock, the 3 lanes, state management |
+| `api-adapter.js` | API translation (Anthropic <-> OpenAI), the sign-in gate, `/effort` + `/logout`, effort -> model |
+| `provider-settings.*` / `signin-banner.js` | Options sign-in card + side-panel sign-in takeover (paste flow) |
+| `effort-dialog.js` | The `/effort` picker modal |
+| `ui-branding.js` / `brand-overlay.js` | Re-skin the panel + page glow to Dark LLM purple |
 | `auth-bypass.js` | Keeps the stock extension from showing Claude's own login (placeholder tokens only) |
-| `ui-branding.js` | Re-skins the panel to Darkbrowser + Dark LLM power-purple |
-| `brand-overlay.js` | Page glow border and stop-button theming |
-| `sidepanel-provider-menu.js` | Provider / model selector in the side panel |
 
-Requests flow: **stock extension → `fetch` intercept in `api-adapter.js` → sign-in gate → translate to
-`chat/completions` → `https://dark-llm.cropbinary.com/v1` with your Bearer token.**
+Requests flow: **stock extension -> `fetch` intercept in `api-adapter.js` -> sign-in gate -> translate
+to `chat/completions` -> `https://dark-llm.cropbinary.com/v1` with your Bearer token.**
 
 ## Security
 
@@ -173,12 +181,10 @@ Requests flow: **stock extension → `fetch` intercept in `api-adapter.js` → s
   nothing reaches the gateway.
 - **Token stays local.** Your Dark LLM key lives in `chrome.storage.local` on your machine and is only
   ever sent to the gateway as a Bearer header.
-- **Sign-in is the same service as the CLI.** The `/token` page and `POST /token` are served by
+- **Sign-in is the same service as the CLI.** The `/token` page is served by
   [`darkcode-auth`](https://github.com/dark-crop/dark-core), which validates your username/password
   (PBKDF2-hashed store) and hands back your LiteLLM virtual key - carrying all your per-user usage
   limits and private vector store.
-- **Placeholder tokens are treated as signed-out.** The stock extension's fake auth keys
-  (`custom-provider-*`, `darkbrowser-signed-out`) are explicitly rejected by the gate.
 
 ## Relationship to Claude for Chrome
 
@@ -199,5 +205,5 @@ Part of the [**dark-crop**](https://github.com/dark-crop) family:
 
 ## Status
 
-Early preview. The lock, hard sign-in (options card + side-panel takeover), and vision (all lanes read
-screenshots) all work. License: MIT.
+Early preview. The lock, hard sign-in (options card + side-panel takeover), two-axis model with
+`/effort`, and vision (all lanes read screenshots) all work. License: MIT.
