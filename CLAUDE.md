@@ -48,7 +48,11 @@ limits + private vector store.
   rebranded to "Darkbrowser".
 - No build step. Load unpacked from source. `assets/` is upstream's bundled React app - do NOT hand-edit
   it; do our work in the root injected scripts (`*-registry.js`, `api-adapter.js`, `*-branding.js`,
-  `*-overlay.js`, `provider-settings.*`).
+  `*-overlay.js`, `provider-settings.*`). **One deliberate exception:** `assets/SessionPool-Cf_smfO9.js`
+  `Am()` was patched to add `{command:"effort"}` and `{command:"logout"}` to the `/` command menu (search
+  `command:"effort"`). This is display-only - submit routing still only special-cases compact/share, so
+  `/effort` and `/logout` reach `api-adapter.js` as normal messages and are handled there. Re-apply if the
+  bundle is ever regenerated.
 - No em-dash characters anywhere (family rule).
 - Models roster mirrors `dark-core/litellm/config.yaml` (loki / thor / thor-1m x effort tiers).
 - **Vision:** all lanes are marked `supportsVision: true` because every lane loads an `--mmproj`
