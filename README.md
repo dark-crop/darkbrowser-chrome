@@ -32,14 +32,6 @@
   <img src="docs/assets/darkbrowser.png" alt="Darkbrowser: the side panel driving Unsplash on the Thor lane, purple page-glow border, 'Take screenshot' and 'Stop Darkbrowser' controls" width="880" />
 </p>
 
-<table align="center">
-<tr>
-<td align="center">🔒<br/><b>One gateway</b><br/>dark-llm, locked</td>
-<td align="center">👁<br/><b>Every lane sees</b><br/>screenshots, all models</td>
-<td align="center">🚪<br/><b>Hard sign-in</b><br/>no guest access</td>
-</tr>
-</table>
-
 ## The unlock
 
 Most browser agents route everything you see and do on the web through a vendor's cloud.
