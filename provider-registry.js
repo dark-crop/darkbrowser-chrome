@@ -33,19 +33,17 @@
       colorDark: '#c084fc',
       requiresApiKey: true,
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
-      defaultModel: 'thor-high',
+      defaultModel: 'thor',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
-      // Every lane loads an mmproj projector on the gateway, so all of them read images (screenshots).
-      // See dark-core llama-swap/config.yaml.
+      // Two-axis control (like the darkcode CLI): the picker chooses the LANE (these 3); the effort
+      // tier (low/med/high/ultra, default high) is set with the /effort chat command. api-adapter.js
+      // combines them into the real gateway model id (e.g. lane "thor" + effort "high" -> "thor-high").
+      // Every lane loads an mmproj projector on the gateway, so all read images. See dark-core
+      // llama-swap/config.yaml.
       models: [
-        createModel('thor-high', 'Thor - code (256K)', { supportsVision: true }),
-        createModel('thor-ultra', 'Thor Ultra - code (256K)', { supportsVision: true }),
-        createModel('thor-med', 'Thor Med - code (256K)', { supportsVision: true }),
-        createModel('thor-1m-high', 'Thor 1M - long context', { supportsVision: true }),
-        createModel('thor-1m-ultra', 'Thor 1M Ultra - long context', { supportsVision: true }),
-        createModel('loki-high', 'Loki - fast MoE', { supportsVision: true }),
-        createModel('loki-ultra', 'Loki Ultra - MoE', { supportsVision: true }),
-        createModel('loki-med', 'Loki Med - MoE', { supportsVision: true })
+        createModel('thor', 'Thor (256K)', { supportsVision: true, description: 'Coder - default' }),
+        createModel('thor-1m', 'Thor 1M (1M)', { supportsVision: true, description: 'Long context' }),
+        createModel('loki', 'Loki (256K)', { supportsVision: true, description: 'Fast MoE' })
       ]
     },
     anthropic: {

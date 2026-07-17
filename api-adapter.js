@@ -19,7 +19,7 @@
     darkllm: {
       baseUrl: 'https://dark-llm.cropbinary.com/v1',
       apiKey: '',
-      model: 'thor-high'
+      model: 'thor'
     }
   };
 
@@ -557,7 +557,7 @@
       return body.model;
     }
 
-    return provider.model || DEFAULT_PROVIDER_CONFIG.zai.model;
+    return provider.model || DEFAULT_PROVIDER_CONFIG.darkllm.model;
   }
 
   function downgradeVisionMessages(messages, modelName) {
@@ -1019,11 +1019,234 @@
     };
   }
 
+  // Pull the plain text of the most recent user turn (content is a string or an array of blocks).
+  function extractLastUserText(request) {
+    const messages = Array.isArray(request?.messages) ? request.messages : [];
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const message = messages[i];
+      if (!message || message.role !== 'user') {
+        continue;
+      }
+      const content = message.content;
+      if (typeof content === 'string') {
+        return content;
+      }
+      if (Array.isArray(content)) {
+        return content
+          .filter((block) => block && block.type === 'text' && typeof block.text === 'string')
+          .map((block) => block.text)
+          .join(' ');
+      }
+      return '';
+    }
+    return '';
+  }
+
+  // Effort axis (like the darkcode CLI): the model picker chooses the lane; /effort chooses the tier.
+  // The real gateway model is lane + tier, e.g. "thor" + "high" -> "thor-high".
+  const EFFORTS = ['low', 'med', 'high', 'ultra'];
+  const LANES = ['thor-1m', 'thor', 'loki'];
+  const DEFAULT_EFFORT = 'high';
+
+  function capitalize(value) {
+    const s = String(value || '');
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+
+  function normalizeEffort(arg) {
+    const a = String(arg || '').toLowerCase();
+    if (a === 'medium') return 'med';
+    if (a === 'max') return 'ultra';
+    return EFFORTS.includes(a) ? a : null;
+  }
+
+  async function getEffort() {
+    try {
+      if (!globalThis.chrome?.storage?.local) return DEFAULT_EFFORT;
+      const result = await chrome.storage.local.get('darkbrowserEffort');
+      const value = result?.darkbrowserEffort;
+      return EFFORTS.includes(value) ? value : DEFAULT_EFFORT;
+    } catch {
+      return DEFAULT_EFFORT;
+    }
+  }
+
+  async function setEffort(tier) {
+    try {
+      if (globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.set({ darkbrowserEffort: tier });
+      }
+    } catch (error) {
+      console.warn('[API Adapter] Failed to persist effort:', error);
+    }
+  }
+
+  // Turn a bare lane id (thor / thor-1m / loki) into the effort-suffixed gateway id. Already-suffixed
+  // ids (e.g. a legacy "thor-high") pass through unchanged.
+  function applyEffort(modelId, effort) {
+    const id = String(modelId || '').trim();
+    for (const lane of LANES) {
+      if (EFFORTS.some((tier) => id === `${lane}-${tier}`)) {
+        return id;
+      }
+    }
+    for (const lane of LANES) {
+      if (id === lane) {
+        return `${lane}-${effort}`;
+      }
+    }
+    return id;
+  }
+
+  // Slash commands handled locally (never sent to the model). Mirrors the darkcode CLI.
+  function parseSlashCommand(request) {
+    const raw = extractLastUserText(request).trim();
+    if (!raw.startsWith('/')) {
+      return null;
+    }
+    const parts = raw.split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const arg = parts[1] || '';
+    if (cmd === '/logout' || cmd === '/signout') {
+      return { cmd: 'logout' };
+    }
+    if (cmd === '/effort') {
+      return { cmd: 'effort', arg };
+    }
+    return null;
+  }
+
+  async function clearSignIn() {
+    if (registry?.updateState) {
+      await registry.updateState((draft) => {
+        if (draft.providers?.darkllm) {
+          draft.providers.darkllm.apiKey = '';
+        }
+      });
+    }
+    try {
+      if (globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.remove('darkbrowserUsername');
+      }
+    } catch (error) {
+      console.warn('[API Adapter] Failed to clear username:', error);
+    }
+  }
+
+  // The signed-in Dark LLM username, captured at sign-in from the gateway's /key/info (key_alias).
+  async function getUsername() {
+    try {
+      if (!globalThis.chrome?.storage?.local) return null;
+      const result = await chrome.storage.local.get('darkbrowserUsername');
+      return result?.darkbrowserUsername || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Build the (mock) account profile the stock extension shows, using the real signed-in username
+  // instead of the placeholder custom-provider identity.
+  async function buildProfile() {
+    const username = await getUsername();
+    if (!username) {
+      return MOCK_PROFILE;
+    }
+    const account = { ...MOCK_ACCOUNT, email: username, name: username, display_name: username };
+    return { account, account_uuid: account.uuid, organization: MOCK_ORG };
+  }
+
+  // Emit a single assistant text turn as if the model had replied - streamed (Anthropic SSE) when
+  // the caller asked for a stream, otherwise a plain message object. Used for local slash commands.
+  function buildAssistantMessageResponse(text, model, stream) {
+    const messageId = randomId('msg');
+    if (!stream) {
+      return jsonResponse({
+        id: messageId,
+        type: 'message',
+        role: 'assistant',
+        model,
+        content: [{ type: 'text', text }],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: { input_tokens: 0, output_tokens: 0 }
+      });
+    }
+
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(sseChunk('message_start', {
+          type: 'message_start',
+          message: {
+            id: messageId,
+            type: 'message',
+            role: 'assistant',
+            model,
+            content: [],
+            stop_reason: null,
+            stop_sequence: null,
+            usage: { input_tokens: 0, output_tokens: 0 }
+          }
+        }));
+        controller.enqueue(sseChunk('content_block_start', {
+          type: 'content_block_start',
+          index: 0,
+          content_block: { type: 'text', text: '' }
+        }));
+        controller.enqueue(sseChunk('content_block_delta', {
+          type: 'content_block_delta',
+          index: 0,
+          delta: { type: 'text_delta', text }
+        }));
+        controller.enqueue(sseChunk('content_block_stop', { type: 'content_block_stop', index: 0 }));
+        controller.enqueue(sseChunk('message_delta', {
+          type: 'message_delta',
+          delta: { stop_reason: 'end_turn', stop_sequence: null },
+          usage: { output_tokens: 0 }
+        }));
+        controller.enqueue(sseChunk('message_stop', { type: 'message_stop' }));
+        controller.close();
+      }
+    });
+
+    return new Response(body, { status: 200, headers: buildSSEHeaders() });
+  }
+
   async function proxyAnthropicMessages(input, init) {
     const headers = mergeHeaders(input, init);
     const anthropicRequest = await readJsonBody(input, init);
     const providerConfig = await getProviderConfig();
     const provider = getActiveProvider(providerConfig);
+
+    // Local slash commands, handled before the gate so they work independently of the model call.
+    const command = parseSlashCommand(anthropicRequest);
+    const wantsStream = Boolean(anthropicRequest.stream);
+    if (command?.cmd === 'logout') {
+      await clearSignIn();
+      await writeDebugLog({ phase: 'slash_logout' });
+      return buildAssistantMessageResponse(
+        'Signed out of Darkbrowser. The sign-in screen will appear - sign in again to continue.',
+        provider.model || 'darkllm',
+        wantsStream
+      );
+    }
+    if (command?.cmd === 'effort') {
+      const tier = normalizeEffort(command.arg);
+      if (!tier) {
+        const current = await getEffort();
+        return buildAssistantMessageResponse(
+          `Current effort: ${capitalize(current)}. Usage: /effort low | med | high | ultra`,
+          provider.model || 'darkllm',
+          wantsStream
+        );
+      }
+      await setEffort(tier);
+      await writeDebugLog({ phase: 'slash_effort', tier });
+      return buildAssistantMessageResponse(
+        `Effort set to ${capitalize(tier)}. New messages use the ${provider.model || 'thor'} lane at ${capitalize(tier)} effort.`,
+        provider.model || 'darkllm',
+        wantsStream
+      );
+    }
 
     // Hard login gate (mirrors the darkcode CLI): Darkbrowser will not talk to the gateway
     // until the user has signed in and a real Dark LLM key is stored. There is no guest access.
@@ -1037,7 +1260,8 @@
       );
     }
 
-    const requestedModel = resolveTargetModel(anthropicRequest, provider);
+    // Combine the picked lane with the current effort tier into the real gateway model id.
+    const requestedModel = applyEffort(resolveTargetModel(anthropicRequest, provider), await getEffort());
 
     headers.set('Content-Type', 'application/json');
     headers.delete('x-api-key');
@@ -1309,7 +1533,7 @@
       }
 
       if (url.includes('/api/oauth/profile') || url.includes('/oauth/profile')) {
-        return jsonResponse(MOCK_PROFILE);
+        return jsonResponse(await buildProfile());
       }
 
       if (url.includes('oauth/token') || url.includes('oauth2/token')) {

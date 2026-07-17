@@ -36,7 +36,6 @@
   let statusEl = null;
   let inputEl = null;
   let saveEl = null;
-  let signOutBtn = null;
 
   function ensureOverlay() {
     if (overlay || !document.body) {
@@ -127,27 +126,6 @@
       }
       #darkbrowser-signin .db-status.error { color: #f38ba8; }
       #darkbrowser-signin .db-status.success { color: #a6e3a1; }
-      #darkbrowser-signout {
-        position: fixed;
-        right: 10px;
-        bottom: 8px;
-        z-index: 2147482000;
-        display: none;
-        align-items: center;
-        gap: 5px;
-        padding: 5px 10px;
-        border: 1px solid rgba(168, 85, 247, 0.4);
-        border-radius: 999px;
-        background: color-mix(in srgb, hsl(var(--bg-000, 60 3% 9%)) 80%, transparent);
-        color: #c084fc;
-        font-family: var(--font-ui, ui-sans-serif, system-ui, sans-serif);
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        opacity: 0.7;
-        backdrop-filter: blur(6px);
-      }
-      #darkbrowser-signout:hover { opacity: 1; }
     `;
     document.head.appendChild(style);
 
@@ -186,24 +164,7 @@
       }
     });
 
-    // Discreet sign-out pill, shown only while signed in (the overlay handles the signed-out state).
-    signOutBtn = document.createElement('button');
-    signOutBtn.id = 'darkbrowser-signout';
-    signOutBtn.type = 'button';
-    signOutBtn.textContent = 'Sign out';
-    signOutBtn.addEventListener('click', onSignOut);
-    document.body.appendChild(signOutBtn);
-
     return overlay;
-  }
-
-  async function onSignOut() {
-    await registry.updateState((draft) => {
-      draft.providers.darkllm.apiKey = '';
-    });
-    if (inputEl) inputEl.value = '';
-    setStatus('Signed out.', '');
-    await refresh();
   }
 
   function setStatus(message, kind) {
@@ -221,6 +182,21 @@
     }
   }
 
+  // Ask the gateway who this key belongs to (key_alias = the Dark LLM username) and remember it,
+  // so the account shows the real username instead of the placeholder identity.
+  async function captureUsername(key) {
+    try {
+      const res = await fetch(`${GATEWAY}/key/info`, { headers: { Authorization: `Bearer ${key}` } });
+      const data = res.ok ? await res.json() : null;
+      const username = data?.info?.key_alias || data?.info?.user_id || '';
+      if (globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.set({ darkbrowserUsername: username });
+      }
+    } catch {
+      /* non-fatal: the account just keeps the placeholder identity */
+    }
+  }
+
   async function onSave() {
     const key = String(inputEl?.value || '').trim();
     if (!key) {
@@ -235,6 +211,7 @@
       setStatus('The gateway rejected that token. Check it and try again.', 'error');
       return;
     }
+    await captureUsername(key);
     await registry.updateState((draft) => {
       draft.activeProvider = 'darkllm';
       draft.providers.darkllm.apiKey = key;
@@ -252,7 +229,6 @@
     const state = await registry.loadState();
     const signedIn = isSignedIn(state.providers.darkllm);
     overlay.style.display = signedIn ? 'none' : 'flex';
-    if (signOutBtn) signOutBtn.style.display = signedIn ? 'inline-flex' : 'none';
   }
 
   chrome.storage.onChanged.addListener((changes, areaName) => {

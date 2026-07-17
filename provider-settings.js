@@ -341,6 +341,19 @@
     }
   }
 
+  async function captureUsername(key) {
+    try {
+      const res = await fetch(`${GATEWAY}/key/info`, { headers: { Authorization: `Bearer ${key}` } });
+      const data = res.ok ? await res.json() : null;
+      const username = data?.info?.key_alias || data?.info?.user_id || '';
+      if (globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.set({ darkbrowserUsername: username });
+      }
+    } catch {
+      /* non-fatal */
+    }
+  }
+
   async function renderSignin() {
     const current = await registry.loadState();
     const dark = current.providers.darkllm || {};
@@ -382,6 +395,7 @@
         setSigninStatus('The gateway rejected that token. Check it and try again.', 'error');
         return;
       }
+      await captureUsername(key);
       await registry.updateState((draft) => {
         draft.activeProvider = 'darkllm';
         draft.providers.darkllm.apiKey = key;
@@ -402,6 +416,9 @@
       await registry.updateState((draft) => {
         draft.providers.darkllm.apiKey = '';
       });
+      if (globalThis.chrome?.storage?.local) {
+        await chrome.storage.local.remove('darkbrowserUsername');
+      }
       setSigninStatus('Signed out.', '');
       await renderSignin();
     });

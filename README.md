@@ -117,9 +117,18 @@ Every lane routes to your gateway. Pick one from the model selector at the top o
 | **Thor 1M** | long-context variant | Large pages, long multi-step sessions |
 | **Loki** | fast MoE | Quick, cheap actions |
 
-Each lane has effort tiers (`med` / `high` / `ultra`) exposed as separate entries in the picker.
-The gateway's exact roster is defined in
+**Two-axis control (like the darkcode CLI):** the model picker chooses the **lane**; the **effort**
+tier is a separate axis set with the `/effort` chat command (`/effort low | med | high | ultra`,
+default **high**). Darkbrowser combines them into the real gateway model (lane `thor` + effort `high`
+-> `thor-high`). The gateway's exact roster is defined in
 [dark-core `litellm/config.yaml`](https://github.com/dark-crop/dark-core).
+
+### Chat commands
+
+| Command | Effect |
+|---|---|
+| `/effort low\|med\|high\|ultra` | Set the effort tier for new messages (default high). `/effort` alone shows the current tier. |
+| `/logout` | Sign out (clears your token); the sign-in screen reappears. Alias: `/signout`. |
 
 > **Vision:** every lane loads an mmproj projector on the gateway (see dark-core `llama-swap/config.yaml`),
 > so all lanes read images. The agent's screenshots reach the model - no separate vision lane needed.

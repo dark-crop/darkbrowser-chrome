@@ -27,6 +27,13 @@ translating Anthropic <-> OpenAI on the fly. Our changes are a thin, contained l
   a usable Dark LLM key; the real credential is `providers.darkllm.apiKey`, gated separately.
 - `signin-banner.js` - the VISIBLE half of the gate. Loaded by `sidepanel.html`; renders a full-panel
   sign-in takeover while signed out (same paste flow as the options card), hides itself once signed in.
+- Slash commands (typed into the chat, handled in `api-adapter.js` `parseSlashCommand`, never sent to
+  the model): `/logout` (alias `/signout`) clears the key and the banner re-appears; `/effort
+  low|med|high|ultra` sets the effort tier (stored in `chrome.storage.local` key `darkbrowserEffort`,
+  default high). Sign-out also lives on the options card.
+- **Two-axis model (like the CLI):** the picker shows 3 LANES only (thor / thor-1m / loki); the effort
+  tier is the `/effort` axis. `applyEffort()` combines them into the real gateway id (`thor` + `high`
+  -> `thor-high`) at request time. Don't put effort variants back in the model picker.
 
 ## Sign-in = darkcode-auth
 
