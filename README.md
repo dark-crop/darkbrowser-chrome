@@ -32,6 +32,16 @@
   <img src="docs/assets/darkbrowser.png" alt="Darkbrowser: the side panel driving Unsplash on the Thor lane, purple page-glow border, 'Take screenshot' and 'Stop Darkbrowser' controls" width="880" />
 </p>
 
+### ⚡ Install (Chrome / Chromium 116+)
+
+```bash
+git clone https://github.com/dark-crop/darkbrowser-chrome.git
+```
+
+Then open `chrome://extensions` &rarr; enable **Developer mode** &rarr; **Load unpacked** &rarr; select the
+`darkbrowser-chrome` folder. No build step. Open the side panel (`Cmd/Ctrl + E`) and sign in with your
+Dark LLM account. [Full install &amp; sign-in &rarr;](#install)
+
 ## The unlock
 
 Most browser agents route everything you see and do on the web through a vendor's cloud.
@@ -79,7 +89,7 @@ flowchart LR
 
 ## Install
 
-Darkbrowser is a private, unsigned extension - install it unpacked:
+Darkbrowser isn't on the Chrome Web Store (unsigned) - install it unpacked:
 
 1. Clone this repo:
    ```bash
