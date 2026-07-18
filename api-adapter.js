@@ -1047,7 +1047,7 @@
   // Effort axis (like the darkcode CLI): the model picker chooses the lane; /effort chooses the tier.
   // The real gateway model is lane + tier, e.g. "thor" + "high" -> "thor-high".
   const EFFORTS = ['low', 'med', 'high', 'ultra'];
-  const LANES = ['thor-1m', 'thor', 'loki'];
+  const LANES = ['thor'];
   const DEFAULT_EFFORT = 'high';
 
   function capitalize(value) {

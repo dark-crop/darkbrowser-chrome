@@ -35,15 +35,11 @@
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
       defaultModel: 'thor',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
-      // Two-axis control (like the darkcode CLI): the picker chooses the LANE (these 3); the effort
-      // tier (low/med/high/ultra, default high) is set with the /effort chat command. api-adapter.js
-      // combines them into the real gateway model id (e.g. lane "thor" + effort "high" -> "thor-high").
-      // Every lane loads an mmproj projector on the gateway, so all read images. See dark-core
-      // llama-swap/config.yaml.
+      // Thor is the only lane now (Loki + Thor-1M dropped so all KV goes to Thor at full 262K). The
+      // effort tier (low/med/high/ultra, default high) is set with /effort; api-adapter.js combines
+      // lane + tier into the real gateway id (thor + high -> thor-high). Reads images via mmproj.
       models: [
-        createModel('thor', 'Thor (256K)', { supportsVision: true, description: 'Coder - default' }),
-        createModel('thor-1m', 'Thor 1M (1M)', { supportsVision: true, description: 'Long context' }),
-        createModel('loki', 'Loki (256K)', { supportsVision: true, description: 'Fast MoE' })
+        createModel('thor', 'Thor 1.1 (262K)', { supportsVision: true, description: 'Coder - full 262K context' })
       ]
     },
     anthropic: {
@@ -518,9 +514,10 @@
     const locked = normalized.providers[LOCKED_PROVIDER];
     if (locked) {
       const laneIds = PROVIDERS[LOCKED_PROVIDER].models.map((model) => model.id);
+      // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, thor-1m-*) to the one
+      // remaining lane so the picker's selection is always valid.
       if (!laneIds.includes(locked.model)) {
-        const stored = String(locked.model || '');
-        locked.model = ['thor-1m', 'thor', 'loki'].find((lane) => stored.startsWith(lane)) || 'thor';
+        locked.model = 'thor';
       }
     }
 
