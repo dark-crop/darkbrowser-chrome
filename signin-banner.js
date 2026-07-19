@@ -217,6 +217,8 @@
       draft.providers.darkllm.apiKey = key;
       draft.providers.darkllm.enabled = true;
     });
+    // Load the live model name/lanes from the gateway right after sign-in (no hardcoded name).
+    if (registry.refreshLockedModels) await registry.refreshLockedModels();
     saveEl.disabled = false;
     if (inputEl) inputEl.value = '';
     setStatus('Signed in. Loading Darkbrowser...', 'success');
@@ -242,4 +244,16 @@
   } else {
     refresh();
   }
+
+  // Once, on panel load: if already signed in, pull the live gateway model name/lanes so returning
+  // users get the dynamic name (not the static fallback). Runs a single time - NOT in the storage
+  // listener above - so refreshLockedModels' own state write can't loop.
+  (async () => {
+    try {
+      const state = await registry.loadState();
+      if (isSignedIn(state.providers.darkllm) && registry.refreshLockedModels) {
+        await registry.refreshLockedModels();
+      }
+    } catch (error) {}
+  })();
 })();

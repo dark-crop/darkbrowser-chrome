@@ -33,13 +33,15 @@
       colorDark: '#c084fc',
       requiresApiKey: true,
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
-      defaultModel: 'thor',
+      defaultModel: 'president',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
-      // Thor is the only lane now (Loki + Thor-1M dropped so all KV goes to Thor at full 262K). The
-      // effort tier (low/med/high/ultra, default high) is set with /effort; api-adapter.js combines
-      // lane + tier into the real gateway id (thor + high -> thor-high). Reads images via mmproj.
+      // One chat lane. The DISPLAY NAME is NOT hardcoded - it is loaded live from the gateway
+      // (/v1/models + /model/info) in fetchProviderModels, same source as the darkcode CLI. This
+      // static entry is only the offline/bootstrap fallback (generic label). The effort tier
+      // (low/med/high/ultra, default high) is the /effort axis; api-adapter combines lane + tier
+      // into the real gateway id (president + high -> president-high). Reads images.
       models: [
-        createModel('thor', 'Thor 1.1 (262K)', { supportsVision: true, description: 'Coder - full 262K context' })
+        createModel('president', 'President', { supportsVision: true, description: '' })
       ]
     },
     anthropic: {
@@ -514,10 +516,10 @@
     const locked = normalized.providers[LOCKED_PROVIDER];
     if (locked) {
       const laneIds = PROVIDERS[LOCKED_PROVIDER].models.map((model) => model.id);
-      // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, thor-1m-*) to the one
+      // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, president-*, old ids) to the one
       // remaining lane so the picker's selection is always valid.
       if (!laneIds.includes(locked.model)) {
-        locked.model = 'thor';
+        locked.model = 'president';
       }
     }
 
@@ -729,6 +731,45 @@
         .map((id) => createModel(id, id, { supportsVision: inferVisionSupport(providerId, id) })));
     }
 
+    // Dark LLM: build the lane list DYNAMICALLY from the gateway, exactly like the darkcode CLI.
+    // /v1/models gives the online effort-suffixed ids (president-low/med/high/ultra); /model/info
+    // gives the gateway-owned display name + context. We collapse the tiers into one lane whose
+    // name is whatever the gateway serves - never hardcoded here. Falls back to the static (generic)
+    // entry if the gateway is unreachable.
+    if (providerId === LOCKED_PROVIDER) {
+      const base = String(providerState.baseUrl || definition.defaultBaseUrl).replace(/\/+$/, '');
+      const root = base.replace(/\/v1$/, '');
+      const authHeaders = providerState.apiKey ? { Authorization: `Bearer ${providerState.apiKey}` } : {};
+      let ids = [];
+      try {
+        const res = await fetch(`${base}/models`, { headers: authHeaders });
+        const data = await res.json();
+        ids = (Array.isArray(data.data) ? data.data : [])
+          .map((m) => m && m.id)
+          .filter((id) => id && !id.includes('embed') && !id.includes('image'));
+      } catch (error) {}
+      const meta = {};
+      try {
+        const res = await fetch(`${root}/model/info`, { headers: authHeaders });
+        const data = await res.json();
+        for (const m of Array.isArray(data.data) ? data.data : []) {
+          if (m && m.model_name) meta[m.model_name] = m.model_info || {};
+        }
+      } catch (error) {}
+      const lanes = new Map();
+      for (const id of ids) {
+        const match = id.match(/^(.+)-(low|med|high|ultra)$/);
+        if (!match) continue;
+        const family = match[1];
+        if (lanes.has(family)) continue;
+        const info = meta[id] || {};
+        const brand = info.display_name || (family.charAt(0).toUpperCase() + family.slice(1));
+        const ctxK = info.context_length ? ` (${Math.round(info.context_length / 1000)}K)` : '';
+        lanes.set(family, createModel(family, `${brand}${ctxK}`, { supportsVision: true, description: '' }));
+      }
+      return lanes.size ? Array.from(lanes.values()) : deepClone(definition.models);
+    }
+
     const headers = {};
     if (providerState.apiKey) {
       headers.Authorization = `Bearer ${providerState.apiKey}`;
@@ -938,6 +979,27 @@
     };
   }
 
+  // Pull the Dark LLM lane list + gateway-owned display name LIVE and store it, so the picker and
+  // {{modelName}} show whatever the gateway currently serves (no hardcoded name). Best-effort; keeps
+  // the existing/static models on any failure. Call after sign-in and on panel load.
+  async function refreshLockedModels() {
+    try {
+      const state = await loadState();
+      const providerState = state.providers && state.providers[LOCKED_PROVIDER];
+      if (!providerState || !providerState.apiKey) return;
+      const models = await fetchProviderModels(LOCKED_PROVIDER, providerState);
+      if (!Array.isArray(models) || !models.length) return;
+      const laneIds = models.map((model) => model.id);
+      await updateState((draft) => {
+        draft.providers[LOCKED_PROVIDER].models = models;
+        // If the stored selection no longer exists (e.g. gateway rename), snap to the first lane.
+        if (!laneIds.includes(draft.providers[LOCKED_PROVIDER].model)) {
+          draft.providers[LOCKED_PROVIDER].model = models[0].id;
+        }
+      });
+    } catch (error) {}
+  }
+
   globalThis.BrowserKingRegistry = {
     BRAND,
     PROVIDERS,
@@ -947,6 +1009,7 @@
     saveState,
     updateState,
     fetchProviderModels,
+    refreshLockedModels,
     getEnabledProviders,
     getSelectorProviders,
     getProviderDefinition,

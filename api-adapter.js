@@ -19,7 +19,7 @@
     darkllm: {
       baseUrl: 'https://dark-llm.cropbinary.com/v1',
       apiKey: '',
-      model: 'thor'
+      model: 'president'
     }
   };
 
@@ -1045,9 +1045,9 @@
   }
 
   // Effort axis (like the darkcode CLI): the model picker chooses the lane; /effort chooses the tier.
-  // The real gateway model is lane + tier, e.g. "thor" + "high" -> "thor-high".
+  // The real gateway model is lane + tier, e.g. "president" + "high" -> "president-high".
   const EFFORTS = ['low', 'med', 'high', 'ultra'];
-  const LANES = ['thor'];
+  const LANES = ['president'];
   const DEFAULT_EFFORT = 'high';
 
   function capitalize(value) {
@@ -1258,7 +1258,7 @@
     }
     if (command?.cmd === 'effort') {
       const tier = normalizeEffort(command.arg);
-      const lane = provider.model || 'thor';
+      const lane = provider.model || 'president';
       // No explicit tier (this is what the / menu sends): open the effort picker dialog. A flag in
       // storage triggers effort-dialog.js, which is running on the side panel.
       if (!tier) {
