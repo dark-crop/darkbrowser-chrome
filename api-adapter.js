@@ -634,10 +634,19 @@
     const isOSeries = /^o\d/.test(targetModel);
     const maxTokensKey = isOSeries ? 'max_completion_tokens' : 'max_tokens';
 
+    // Reasoning headroom: max_tokens bounds reasoning + answer combined. The gateway's
+    // model reasons an unpredictable amount (0 tokens on some prompts, ~10K on others),
+    // so a small upstream max_tokens gets fully consumed by the think and the answer is
+    // truncated (finish_reason=length). Floor to the gateway's output ceiling (32000) so
+    // the answer always survives. This is a cap, not a target: the model still stops when
+    // done, so the floor only prevents truncation, it never lengthens replies. LiteLLM
+    // caps at 32768, so a larger upstream value is harmless.
+    const maxTokens = Math.max(Number(body.max_tokens) || 0, 32000);
+
     const openAIRequest = {
       model: targetModel,
       messages,
-      [maxTokensKey]: body.max_tokens,
+      [maxTokensKey]: maxTokens,
       stream: Boolean(body.stream)
     };
 
