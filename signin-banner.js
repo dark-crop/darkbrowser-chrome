@@ -18,7 +18,7 @@
 
   const GATEWAY = 'https://dark-llm.cropbinary.com';
   const MODELS_URL = `${GATEWAY}/v1/models`;
-  const TOKEN_URL = `${GATEWAY}/token`;
+  const TOKEN_URL = `${GATEWAY}/app/sign-in`;
   const PLACEHOLDERS = new Set([
     'darkbrowser-signed-out',
     'browserking-key',

@@ -308,7 +308,7 @@
   // the hard-login gate: with no valid token, api-adapter.js refuses every request.
   const GATEWAY = 'https://dark-llm.cropbinary.com';
   const MODELS_URL = `${GATEWAY}/v1/models`;
-  const TOKEN_URL = `${GATEWAY}/token`;
+  const TOKEN_URL = `${GATEWAY}/app/sign-in`;
 
   const openSignin = document.getElementById('open-signin');
   const tokenInput = document.getElementById('token-input');
