@@ -625,6 +625,29 @@
       });
     }
 
+    // Fill the {{currentDateTime}}/{{modelName}} placeholders with real values and append an <env>
+    // block (local time / timezone / language). Without this the model saw a literal "{{currentDateTime}}"
+    // and couldn't answer "what time is it". The <env> block also survives the gateway's chat-turn gate,
+    // which swaps the system prompt but preserves <env>...</env>.
+    {
+      const sys = messages.find((m) => m.role === 'system');
+      if (sys && typeof sys.content === 'string') {
+        const now = new Date();
+        const opts = Intl.DateTimeFormat().resolvedOptions();
+        const tz = opts.timeZone || 'UTC';
+        const locale = opts.locale || 'en-US';
+        const localTime = now.toLocaleString(locale, {
+          timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+        sys.content = sys.content
+          .replace(/\{\{currentDateTime\}\}/g, localTime)
+          .replace(/\{\{modelName\}\}/g, targetModel || 'the model');
+        if (!sys.content.includes('<env>')) {
+          sys.content += `\n\n<env>\n  Local time: ${localTime} (${tz})\n  Timezone: ${tz}\n  Language: ${locale}\n</env>`;
+        }
+      }
+    }
+
     const visionSupported = checkVisionForModel(providerConfig, provider, targetModel);
     if (!visionSupported) {
       messages = downgradeVisionMessages(messages, targetModel);
