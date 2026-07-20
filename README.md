@@ -29,7 +29,7 @@
 ---
 
 <p align="center">
-  <img src="docs/assets/darkbrowser.png" alt="Darkbrowser: the side panel driving Unsplash on the Thor lane, purple page-glow border, 'Take screenshot' and 'Stop Darkbrowser' controls" width="880" />
+  <img src="docs/assets/darkbrowser.png" alt="Darkbrowser: the side panel driving Unsplash on Mr. President 1.1, purple page-glow border, 'Take screenshot' and 'Stop Darkbrowser' controls" width="880" />
 </p>
 
 ### ⚡ Install (Chrome / Chromium 116+)
@@ -59,17 +59,15 @@ with a Dark LLM account. Same lock, same credential, same "no guest access" as t
 ```mermaid
 flowchart LR
     U(["you"]) --> DB["Darkbrowser<br/>Chrome side panel"]
-    DB -->|"paste token (sign in)"| AUTH{{"darkcode-auth /token<br/>username + password"}}
+    DB -->|"paste token (sign in)"| AUTH{{"darkcode-auth /app/sign-in<br/>username + password"}}
     AUTH -->|"Dark LLM key"| DB
     DB -->|"Bearer key"| G{{"Dark LLM gateway<br/>your GPU box"}}
 
-    subgraph lanes["built-in dark-llm provider (locked)"]
+    subgraph lane["built-in dark-llm provider (locked)"]
         direction TB
-        LK["Loki · fast MoE"]
-        TH["Thor · coder / 256K (default)"]
-        T1["Thor 1M · huge context"]
+        MP["Mr. President 1.1<br/>35B-A3B MoE · 262K · 4 effort tiers"]
     end
-    G --> lanes
+    G --> lane
 
     classDef hub fill:#a855f7,stroke:#7c3aed,stroke-width:2px,color:#fff
     class G,AUTH hub
@@ -81,10 +79,10 @@ flowchart LR
 |---|---|
 | 🔒 **One gateway, one provider** | Hard-locked to `dark-llm`. The other 15 providers exist in code but never surface in the UI. |
 | 🚪 **Hard sign-in, no guest** | The agent refuses every request until you sign in with a Dark LLM account and store a real token. |
-| 🧠 **Your model lanes** | Loki (fast MoE), Thor (coder, 256K), Thor 1M (long context) - picked from the side-panel selector. |
-| ⚡ **Two-axis control** | Pick the lane in the dropdown, the effort tier with `/effort`. Just like the darkcode CLI. |
+| 🧠 **One model, four efforts** | **Mr. President 1.1** (35B-A3B MoE, 262K); `/effort` picks the reasoning tier (low → ultra). The model name comes **live from the gateway**, never hardcoded. |
+| ⚡ **Effort control** | `/effort low\|med\|high\|ultra` sets the reasoning tier (default high). Just like the darkcode CLI. |
 | 🖱 **Full browser toolkit** | Screenshots, clicks, typing, scrolling, tab navigation, and workflow recording, all intact. |
-| 👁 **Every lane reads screenshots** | All three lanes load an mmproj projector on the gateway, so the agent's screenshots reach the model. |
+| 👁 **Reads screenshots** | Mr. President loads an mmproj projector on the gateway, so the agent's screenshots reach the model. |
 | 🎨 **Power-purple UI** | The whole panel themes to Dark LLM purple - sidebar, send button, page-glow border, blob icon. |
 
 ## Install
@@ -108,7 +106,7 @@ Darkbrowser will not run until you sign in. This mirrors the darkcode CLI's brow
 the gateway page, then paste the token back.
 
 1. On the side panel's **Sign in** takeover (or Options -> Providers -> Dark LLM account), click
-   **Open sign-in page**. It opens `https://dark-llm.cropbinary.com/token`.
+   **Open sign-in page**. It opens `https://dark-llm.cropbinary.com/app/sign-in`.
 2. Sign in there with your Dark LLM **username and password**. The page shows your access token.
 3. Copy the token, paste it into the **access token** field, and click **Sign in**.
 
@@ -120,20 +118,15 @@ clears it and re-locks the agent.
 > [`add-user.py`](https://github.com/dark-crop/dark-core/blob/main/docs/users.md). Each account gets
 > its own usage tier and private RAG store.
 
-## Models
+## Model
 
-Every lane routes to your gateway. Pick one from the model selector at the top of the side panel.
+One lane routes to your gateway: **Mr. President 1.1** (Qwen3.6 35B-A3B MoE, 262K context, reads
+screenshots). The model name is loaded **live from the gateway**, never hardcoded.
 
-| Lane | What it is | Best for |
-|---|---|---|
-| **Thor** | 27B coder, 256K context (default) | Everyday browsing tasks, forms, extraction |
-| **Thor 1M** | long-context variant | Large pages, long multi-step sessions |
-| **Loki** | fast MoE | Quick, cheap actions |
-
-**Two-axis control (like the darkcode CLI):** the picker chooses the **lane**; the **effort** tier is
-a separate axis set with `/effort` (default **high**). Darkbrowser combines them into the real gateway
-model (lane `thor` + effort `high` -> `thor-high`). Every lane loads an mmproj projector on the
-gateway (dark-core `llama-swap/config.yaml`), so all lanes read the agent's screenshots.
+**Effort control (like the darkcode CLI):** `/effort low|med|high|ultra` sets the reasoning tier
+(default **high**). Darkbrowser maps it to the real gateway
+model id (`president` + effort `high` -> `president-high`). Mr. President loads a multimodal projector
+on the gateway, so it reads the agent's screenshots directly.
 
 ## Commands
 
@@ -183,7 +176,7 @@ to `chat/completions` -> `https://dark-llm.cropbinary.com/v1` with your Bearer t
   nothing reaches the gateway.
 - **Token stays local.** Your Dark LLM key lives in `chrome.storage.local` on your machine and is only
   ever sent to the gateway as a Bearer header.
-- **Sign-in is the same service as the CLI.** The `/token` page is served by
+- **Sign-in is the same service as the CLI.** The `/app/sign-in` page is served by
   [`darkcode-auth`](https://github.com/dark-crop/dark-core), which validates your username/password
   (PBKDF2-hashed store) and hands back your LiteLLM virtual key - carrying all your per-user usage
   limits and private vector store.
