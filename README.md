@@ -65,7 +65,7 @@ flowchart LR
 
     subgraph lane["built-in dark-llm provider (locked)"]
         direction TB
-        MP["Mr. President 1.1<br/>35B-A3B MoE · 262K · 4 effort tiers"]
+        MP["Mr. President 1.1<br/>262K · 4 effort tiers"]
     end
     G --> lane
 
@@ -79,10 +79,10 @@ flowchart LR
 |---|---|
 | 🔒 **One gateway, one provider** | Hard-locked to `dark-llm`. The other 15 providers exist in code but never surface in the UI. |
 | 🚪 **Hard sign-in, no guest** | The agent refuses every request until you sign in with a Dark LLM account and store a real token. |
-| 🧠 **One model, four efforts** | **Mr. President 1.1** (35B-A3B MoE, 262K); `/effort` picks the reasoning tier (low → ultra). The model name comes **live from the gateway**, never hardcoded. |
+| 🧠 **One model, four efforts** | **Mr. President 1.1** (full 262K context); `/effort` picks the reasoning tier (low → ultra). The model name comes **live from the gateway**, never hardcoded. |
 | ⚡ **Effort control** | `/effort low\|med\|high\|ultra` sets the reasoning tier (default high). Just like the darkcode CLI. |
 | 🖱 **Full browser toolkit** | Screenshots, clicks, typing, scrolling, tab navigation, and workflow recording, all intact. |
-| 👁 **Reads screenshots** | Mr. President loads an mmproj projector on the gateway, so the agent's screenshots reach the model. |
+| 👁 **Reads screenshots** | Mr. President reads images on the gateway, so the agent's screenshots reach the model. |
 | 🎨 **Power-purple UI** | The whole panel themes to Dark LLM purple - sidebar, send button, page-glow border, blob icon. |
 
 ## Install
@@ -120,13 +120,13 @@ clears it and re-locks the agent.
 
 ## Model
 
-One lane routes to your gateway: **Mr. President 1.1** (Qwen3.6 35B-A3B MoE, 262K context, reads
-screenshots). The model name is loaded **live from the gateway**, never hardcoded.
+One lane routes to your gateway: **Mr. President 1.1** (262K context, reads screenshots). The model
+name is loaded **live from the gateway**, never hardcoded.
 
 **Effort control (like the darkcode CLI):** `/effort low|med|high|ultra` sets the reasoning tier
 (default **high**). Darkbrowser maps it to the real gateway
-model id (`president` + effort `high` -> `president-high`). Mr. President loads a multimodal projector
-on the gateway, so it reads the agent's screenshots directly.
+model id (`president` + effort `high` -> `president-high`). Mr. President reads the agent's screenshots
+directly on the gateway.
 
 ## Commands
 
