@@ -508,8 +508,20 @@
       'image',
       'picture'
     ];
+    if (visualPatterns.some((pattern) => latestUserText.includes(pattern))) {
+      return true;
+    }
 
-    return visualPatterns.some((pattern) => latestUserText.includes(pattern));
+    // Browser-ACTION intents. The local model sometimes emits a tool call as prose/text (e.g. a
+    // `<tool_code>` block) instead of actually calling the browser tool, so nothing happens. Forcing
+    // tool_choice on a clear action makes it act. Almost every darkbrowser turn is an action anyway.
+    const ACTION_RE = /\b(?:click|tap|press|type|enter|fill|input|scroll|navigate|go ?to|open|visit|browse|reload|refresh|go back|go forward|switch tab|new tab|close tab|select|choose|search(?: for)?|look for|find|log ?in|sign ?in|sign ?up|submit|check ?out|add to cart|buy|purchase|download|upload|hover|drag|play|pause)\b/;
+    if (ACTION_RE.test(latestUserText)) {
+      return true;
+    }
+
+    // A URL / "go to this site" is a navigate.
+    return /https?:\/\//.test(latestUserText);
   }
 
   function convertAnthropicToolsToOpenAI(tools) {
