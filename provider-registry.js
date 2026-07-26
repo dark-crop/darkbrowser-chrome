@@ -33,21 +33,29 @@
       colorDark: '#c084fc',
       requiresApiKey: true,
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
-      defaultModel: 'mr-president-2-0',
+      defaultModel: 'qwen3-vl-8b-abliterated',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
       // One chat lane. The DISPLAY NAME is NOT hardcoded - it is loaded live from the gateway
       // (/v1/models + /model/info) in fetchProviderModels, same source as the darkcode CLI. This
       // static entry is only the offline/bootstrap fallback (generic label). The effort tier
       // (low/med/high/ultra, default high) is the /effort axis; api-adapter combines lane + tier
       // into the real gateway id (mr-president-2-0 + high -> mr-president-2-0-high). Reads images.
+      // Vision lane FIRST = the default (laneIds[0]): darkbrowser is a screenshot-driven agent, so it
+      // needs a model that can SEE. President/Agent are text-only vLLM (no mmproj anymore) -> marked
+      // supportsVision:false so darkbrowser never sends them screenshots (which would 400). They stay
+      // available for text-only tasks.
       models: [
-        createModel('mr-president-2-0', 'Mr.President Lv.284', {
+        createModel('qwen3-vl-8b-abliterated', 'Qwen3-VL-8B-abliterated', {
           supportsVision: true,
-          description: '1M context · Best for complex tasks',
+          description: '32K context · Reads images (vision)',
+        }),
+        createModel('mr-president-2-0', 'Mr.President Lv.284', {
+          supportsVision: false,
+          description: '1M context · Best for complex tasks (text-only)',
         }),
         createModel('mr-agent-1-0', 'Mr.Agent Lv.35', {
-          supportsVision: true,
-          description: '262K context · Efficient for routine tasks',
+          supportsVision: false,
+          description: '262K context · Efficient for routine tasks (text-only)',
         })
       ]
     },
