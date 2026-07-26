@@ -33,7 +33,7 @@
       colorDark: '#c084fc',
       requiresApiKey: true,
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
-      defaultModel: 'qwen3-vl-8b-abliterated',
+      defaultModel: 'qwen3-vl-30b-a3b',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
       // One chat lane. The DISPLAY NAME is NOT hardcoded - it is loaded live from the gateway
       // (/v1/models + /model/info) in fetchProviderModels, same source as the darkcode CLI. This
@@ -45,17 +45,13 @@
       // supportsVision:false so darkbrowser never sends them screenshots (which would 400). They stay
       // available for text-only tasks.
       models: [
-        createModel('qwen3-vl-8b-abliterated', 'Qwen3-VL-8B-abliterated', {
+        createModel('qwen3-vl-30b-a3b', 'Qwen3-VL-30B-A3B', {
           supportsVision: true,
-          description: '32K context · Reads images (vision)',
+          description: '256K context · Reasons + sees images',
         }),
         createModel('mr-president-2-0', 'Mr.President Lv.284', {
           supportsVision: false,
           description: '1M context · Best for complex tasks (text-only)',
-        }),
-        createModel('mr-agent-1-0', 'Mr.Agent Lv.35', {
-          supportsVision: false,
-          description: '262K context · Efficient for routine tasks (text-only)',
         })
       ]
     },
@@ -534,7 +530,7 @@
       // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, president-*, old ids) to a
       // real lane so the picker's selection is always valid (first lane = default).
       if (!laneIds.includes(locked.model)) {
-        locked.model = laneIds[0] || 'mr-president-2-0';
+        locked.model = laneIds[0] || 'qwen3-vl-30b-a3b';
       }
     }
 

@@ -55,7 +55,7 @@
     darkllm: {
       baseUrl: 'https://dark-llm.cropbinary.com/v1',
       apiKey: '',
-      model: 'qwen3-vl-8b-abliterated'
+      model: 'qwen3-vl-30b-a3b'
     }
   };
 
@@ -1127,7 +1127,7 @@
   // Effort axis (like the darkcode CLI): the model picker chooses the lane; /effort chooses the tier.
   // The real gateway model is lane + tier, e.g. "mr-president-2-0" + "high" -> "mr-president-2-0-high".
   const EFFORTS = ['low', 'med', 'high', 'ultra'];
-  const LANES = ['qwen3-vl-8b-abliterated', 'mr-president-2-0', 'mr-agent-1-0'];
+  const LANES = ['qwen3-vl-30b-a3b', 'mr-president-2-0'];
   const DEFAULT_EFFORT = 'high';
 
   function capitalize(value) {
@@ -1338,7 +1338,7 @@
     }
     if (command?.cmd === 'effort') {
       const tier = normalizeEffort(command.arg);
-      const lane = provider.model || 'qwen3-vl-8b-abliterated';
+      const lane = provider.model || 'qwen3-vl-30b-a3b';
       // No explicit tier (this is what the / menu sends): open the effort picker dialog. A flag in
       // storage triggers effort-dialog.js, which is running on the side panel.
       if (!tier) {
