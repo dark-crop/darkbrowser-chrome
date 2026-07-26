@@ -41,7 +41,8 @@
       // (low/med/high/ultra, default high) is the /effort axis; api-adapter combines lane + tier
       // into the real gateway id (president + high -> president-high). Reads images.
       models: [
-        createModel('president', 'President', { supportsVision: true, description: '' })
+        createModel('president', 'President', { supportsVision: true, description: '' }),
+        createModel('mr-agent', 'Mr.Agent Lv.35', { supportsVision: true, description: '' })
       ]
     },
     anthropic: {
