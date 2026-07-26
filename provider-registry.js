@@ -33,16 +33,22 @@
       colorDark: '#c084fc',
       requiresApiKey: true,
       defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
-      defaultModel: 'president',
+      defaultModel: 'mr-president-2-0',
       note: 'Sign in with your Dark LLM account to get your access token. This is the only provider Darkbrowser uses.',
       // One chat lane. The DISPLAY NAME is NOT hardcoded - it is loaded live from the gateway
       // (/v1/models + /model/info) in fetchProviderModels, same source as the darkcode CLI. This
       // static entry is only the offline/bootstrap fallback (generic label). The effort tier
       // (low/med/high/ultra, default high) is the /effort axis; api-adapter combines lane + tier
-      // into the real gateway id (president + high -> president-high). Reads images.
+      // into the real gateway id (mr-president-2-0 + high -> mr-president-2-0-high). Reads images.
       models: [
-        createModel('president', 'President', { supportsVision: true, description: '' }),
-        createModel('mr-agent', 'Mr.Agent Lv.35', { supportsVision: true, description: '' })
+        createModel('mr-president-2-0', 'Mr.President Lv.284', {
+          supportsVision: true,
+          description: '1M context · Best for complex tasks',
+        }),
+        createModel('mr-agent-1-0', 'Mr.Agent Lv.35', {
+          supportsVision: true,
+          description: '262K context · Efficient for routine tasks',
+        })
       ]
     },
     anthropic: {
@@ -517,10 +523,10 @@
     const locked = normalized.providers[LOCKED_PROVIDER];
     if (locked) {
       const laneIds = PROVIDERS[LOCKED_PROVIDER].models.map((model) => model.id);
-      // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, president-*, old ids) to the one
-      // remaining lane so the picker's selection is always valid.
+      // Map any stored effort-suffixed or dropped-lane id (thor-high, loki, president-*, old ids) to a
+      // real lane so the picker's selection is always valid (first lane = default).
       if (!laneIds.includes(locked.model)) {
-        locked.model = 'president';
+        locked.model = laneIds[0] || 'mr-president-2-0';
       }
     }
 
