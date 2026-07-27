@@ -1127,7 +1127,7 @@
   // Effort axis (like the darkcode CLI): the model picker chooses the lane; /effort chooses the tier.
   // The real gateway model is lane + tier, e.g. "mr-president-2-0" + "high" -> "mr-president-2-0-high".
   const EFFORTS = ['low', 'med', 'high', 'ultra'];
-  const LANES = ['qwen3-vl-8b-abliterated', 'mr-president-2-0'];
+  const LANES = ['qwen3-vl-8b-abliterated', 'mr-president-2-0', 'mr-agent-1-0'];
   const DEFAULT_EFFORT = 'high';
 
   function capitalize(value) {
@@ -1393,7 +1393,7 @@
     }
 
     if (provider.transport === 'anthropic') {
-      const upstreamUrl = `${String(provider.baseUrl || 'https://api.anthropic.com/v1').replace(/\/+$/, '')}/messages`;
+      const upstreamUrl = `${String(provider.baseUrl || 'https://api.darkbrowser.internal/v1').replace(/\/+$/, '')}/messages`;
       headers.delete('Authorization');
       headers.set('x-api-key', provider.apiKey || '');
       headers.set('anthropic-version', headers.get('anthropic-version') || '2023-06-01');
@@ -1644,7 +1644,7 @@
         ? input.url
         : String(input);
 
-    if (url.includes('api.anthropic.com')) {
+    if (url.includes('api.darkbrowser.internal')) {
       if (url.includes('/v1/messages') && !url.includes('/batches')) {
         return proxyAnthropicMessages(input, init);
       }
