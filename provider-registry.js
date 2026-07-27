@@ -66,7 +66,9 @@
       color: '#D97757',
       colorDark: '#F2A488',
       requiresApiKey: true,
-      defaultBaseUrl: 'https://api.darkbrowser.internal/v1',
+      // Unused: darkbrowser is hard-locked to darkllm and never enables this provider. Points at our
+      // own gateway (not a third-party host) so there is no route off-box even if it were ever selected.
+      defaultBaseUrl: 'https://dark-llm.cropbinary.com/v1',
       defaultModel: 'claude-sonnet-4-5',
       models: [
         createModel('claude-haiku-4-5', 'Claude Haiku 4.5', { supportsVision: true }),
