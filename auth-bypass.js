@@ -64,6 +64,36 @@
         };
       }
     } catch (e) {}
+
+    // 3) Silence the Anthropic cloud-pairing bridge WebSocket (wss://bridge.claudeusercontent.com).
+    //    Darkbrowser runs the agent LOCALLY and never uses it, so it just 403s (no real Claude account)
+    //    and spams the error log. All the extension's sends on it are guarded by readyState===OPEN, so
+    //    an inert socket stuck in CONNECTING is safe: no handshake error, no reconnect loop. Other
+    //    WebSockets pass straight through.
+    try {
+      const RealWS = globalThis.WebSocket;
+      if (RealWS && !RealWS.__darkbrowserPatched) {
+        const isBridge = (u) => typeof u === 'string' && /bridge\.claudeusercontent\.com/i.test(u);
+        const Patched = function (url, protocols) {
+          if (isBridge(url)) {
+            return {
+              url, readyState: 0, bufferedAmount: 0, extensions: '', protocol: '', binaryType: 'blob',
+              onopen: null, onclose: null, onerror: null, onmessage: null,
+              send() {}, close() {}, addEventListener() {}, removeEventListener() {},
+              dispatchEvent() { return false; },
+            };
+          }
+          return protocols === undefined ? new RealWS(url) : new RealWS(url, protocols);
+        };
+        Patched.prototype = RealWS.prototype;
+        Patched.CONNECTING = RealWS.CONNECTING;
+        Patched.OPEN = RealWS.OPEN;
+        Patched.CLOSING = RealWS.CLOSING;
+        Patched.CLOSED = RealWS.CLOSED;
+        Patched.__darkbrowserPatched = true;
+        globalThis.WebSocket = Patched;
+      }
+    } catch (e) {}
   })();
 
   const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
