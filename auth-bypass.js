@@ -17,6 +17,55 @@
 (function() {
   'use strict';
 
+  // Hard-lock: the stock Claude-for-Chrome first-run opens Anthropic's OAuth/onboarding page
+  // (claude.ai/oauth/authorize) on install and sets an Anthropic "improve Claude for Chrome" uninstall
+  // survey. Darkbrowser must NEVER send users to Anthropic, so we neutralise both Chrome APIs here.
+  // This file is imported BEFORE the stock service worker (see service-worker-loader.js), so these
+  // patches are in place before the stock onInstalled handler opens the tab / sets the URL.
+  (function lockDownAnthropicNavigation() {
+    const isGateway = (url) => typeof url === 'string' && /dark-llm\.cropbinary\.com/i.test(url);
+    const isOnboarding = (url) =>
+      typeof url === 'string' && /claude\.ai\/oauth|\/oauth\/authorize|oauth_callback|docs\.google\.com\/forms/i.test(url);
+
+    // 1) Swallow any attempt to OPEN an Anthropic OAuth/onboarding tab (create or navigate).
+    try {
+      const origCreate = chrome.tabs && chrome.tabs.create && chrome.tabs.create.bind(chrome.tabs);
+      if (origCreate) {
+        chrome.tabs.create = function(props, cb) {
+          if (props && isOnboarding(props.url)) {
+            if (typeof cb === 'function') { try { cb(undefined); } catch (e) {} }
+            return Promise.resolve(undefined);
+          }
+          return origCreate(props, cb);
+        };
+      }
+      const origUpdate = chrome.tabs && chrome.tabs.update && chrome.tabs.update.bind(chrome.tabs);
+      if (origUpdate) {
+        chrome.tabs.update = function(a, b, c) {
+          const props = (a && typeof a === 'object') ? a : b;   // (props) or (tabId, props[, cb])
+          if (props && isOnboarding(props.url)) {
+            const cb = (typeof c === 'function') ? c : (typeof b === 'function' ? b : undefined);
+            if (typeof cb === 'function') { try { cb(undefined); } catch (e) {} }
+            return Promise.resolve(undefined);
+          }
+          return origUpdate(a, b, c);
+        };
+      }
+    } catch (e) {}
+
+    // 2) Never set the Anthropic uninstall survey - force it empty (allow only our own gateway URL).
+    try {
+      const origSetUninstall = chrome.runtime && chrome.runtime.setUninstallURL &&
+        chrome.runtime.setUninstallURL.bind(chrome.runtime);
+      if (origSetUninstall) {
+        origSetUninstall('');
+        chrome.runtime.setUninstallURL = function(url, cb) {
+          return origSetUninstall((!url || isGateway(url)) ? url : '', cb);
+        };
+      }
+    } catch (e) {}
+  })();
+
   const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
   // The placeholder auth state the stock extension needs to consider itself "connected". None of
