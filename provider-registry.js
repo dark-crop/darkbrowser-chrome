@@ -66,7 +66,7 @@
       color: '#D97757',
       colorDark: '#F2A488',
       requiresApiKey: true,
-      defaultBaseUrl: 'https://api.anthropic.com/v1',
+      defaultBaseUrl: 'https://api.darkbrowser.internal/v1',
       defaultModel: 'claude-sonnet-4-5',
       models: [
         createModel('claude-haiku-4-5', 'Claude Haiku 4.5', { supportsVision: true }),
