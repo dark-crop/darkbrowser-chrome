@@ -17,17 +17,17 @@
 (function() {
   'use strict';
 
-  // Hard-lock: the stock Claude-for-Chrome first-run opens Anthropic's OAuth/onboarding page
-  // (claude.ai/oauth/authorize) on install and sets an Anthropic "improve Claude for Chrome" uninstall
-  // survey. Darkbrowser must NEVER send users to Anthropic, so we neutralise both Chrome APIs here.
-  // This file is imported BEFORE the stock service worker (see service-worker-loader.js), so these
-  // patches are in place before the stock onInstalled handler opens the tab / sets the URL.
-  (function lockDownAnthropicNavigation() {
+  // Hard-lock: the stock upstream first-run opens a vendor OAuth/onboarding page on install and sets a
+  // vendor uninstall survey. Darkbrowser must NEVER redirect users off to the upstream service, so we
+  // neutralise both Chrome APIs here. This file is imported BEFORE the stock service worker (see
+  // service-worker-loader.js), so these patches are in place before the stock onInstalled handler
+  // opens the tab / sets the URL.
+  (function lockDownUpstreamNavigation() {
     const isGateway = (url) => typeof url === 'string' && /dark-llm\.cropbinary\.com/i.test(url);
     const isOnboarding = (url) =>
-      typeof url === 'string' && /claude\.ai\/oauth|\/oauth\/authorize|oauth_callback|docs\.google\.com\/forms/i.test(url);
+      typeof url === 'string' && /\/oauth\/authorize|oauth_callback|docs\.google\.com\/forms/i.test(url);
 
-    // 1) Swallow any attempt to OPEN an Anthropic OAuth/onboarding tab (create or navigate).
+    // 1) Swallow any attempt to OPEN the vendor OAuth/onboarding tab (create or navigate).
     try {
       const origCreate = chrome.tabs && chrome.tabs.create && chrome.tabs.create.bind(chrome.tabs);
       if (origCreate) {
@@ -53,7 +53,7 @@
       }
     } catch (e) {}
 
-    // 2) Never set the Anthropic uninstall survey - force it empty (allow only our own gateway URL).
+    // 2) Never set the vendor uninstall survey - force it empty (allow only our own gateway URL).
     try {
       const origSetUninstall = chrome.runtime && chrome.runtime.setUninstallURL &&
         chrome.runtime.setUninstallURL.bind(chrome.runtime);
@@ -64,7 +64,7 @@
         };
       }
     } catch (e) {}
-    // (The Anthropic cloud-pairing bridge WebSocket is neutralised cleanly at its source instead -
+    // (The upstream cloud-pairing bridge WebSocket is neutralised cleanly at its source instead -
     //  assets/mcpPermissions-CtjiWno1.js, ot() returns before `new WebSocket`. No monkey-patch needed.)
   })();
 
