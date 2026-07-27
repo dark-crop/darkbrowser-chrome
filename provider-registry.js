@@ -52,6 +52,10 @@
         createModel('mr-president-2-0', 'Mr.President Lv.284', {
           supportsVision: false,
           description: '1M context · Best for complex tasks (text-only)',
+        }),
+        createModel('mr-agent-1-0', 'Mr.Agent Lv.35', {
+          supportsVision: false,
+          description: '262K context · Fast agent (text-only)',
         })
       ]
     },
